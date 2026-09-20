@@ -37,5 +37,12 @@ jobs:
       - run: npm ci
       - run: npx supabase start
       - run: npx supabase db reset
-      - run: npm run check:types
       - run: npx supabase test db
+      - run: npm run gen:types
+      - uses: actions/upload-artifact@v4
+        with:
+          name: database-types
+          path: src/types/database.ts
+      # The committed src/types/database.ts is still a placeholder, so the step below
+      # will fail on the first run; that is expected and the real file will be committed from the artifact.
+      - run: git diff --exit-code src/types/database.ts
