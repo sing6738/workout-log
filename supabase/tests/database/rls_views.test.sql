@@ -144,12 +144,12 @@ SELECT set_config('request.jwt.claim.role', 'authenticated', true);
 SELECT lives_ok(
   $$
     SELECT public.save_workout(jsonb_build_object(
-      'id', 'w1111111-1111-1111-1111-111111111111'::uuid,
+      'id', 'a1111111-1111-1111-1111-111111111111'::uuid,
       'date', '2026-09-20T10:00:00Z'::timestamptz,
       'notes', 'User A Leg Day',
       'sets', jsonb_build_array(
         jsonb_build_object(
-          'id', 's1111111-1111-1111-1111-111111111111'::uuid,
+          'id', 'b1111111-1111-1111-1111-111111111111'::uuid,
           'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
           'exercise_order', 1,
           'set_number', 1,
@@ -159,7 +159,7 @@ SELECT lives_ok(
           'rpe', 6.0
         ),
         jsonb_build_object(
-          'id', 's1111111-1111-1111-1111-111111111112'::uuid,
+          'id', 'b1111111-1111-1111-1111-111111111112'::uuid,
           'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
           'exercise_order', 1,
           'set_number', 2,
@@ -169,7 +169,7 @@ SELECT lives_ok(
           'rpe', 8.0
         ),
         jsonb_build_object(
-          'id', 's1111111-1111-1111-1111-111111111113'::uuid,
+          'id', 'b1111111-1111-1111-1111-111111111113'::uuid,
           'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
           'exercise_order', 1,
           'set_number', 3,
@@ -191,12 +191,12 @@ SELECT set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222
 SELECT set_config('request.jwt.claim.role', 'authenticated', true);
 
 SELECT is_empty(
-  $$SELECT * FROM public.workouts WHERE id = 'w1111111-1111-1111-1111-111111111111'::uuid$$,
+  $$SELECT * FROM public.workouts WHERE id = 'a1111111-1111-1111-1111-111111111111'::uuid$$,
   'User B cannot select User A workout'
 );
 
 SELECT is_empty(
-  $$SELECT * FROM public.sets WHERE workout_id = 'w1111111-1111-1111-1111-111111111111'::uuid$$,
+  $$SELECT * FROM public.sets WHERE workout_id = 'a1111111-1111-1111-1111-111111111111'::uuid$$,
   'User B cannot select User A sets'
 );
 
@@ -206,8 +206,8 @@ SELECT throws_ok(
     INSERT INTO public.sets (
       id, workout_id, user_id, exercise_id, exercise_order, set_number, set_type, reps, weight_kg
     ) VALUES (
-      's2222222-2222-2222-2222-222222222221'::uuid,
-      'w1111111-1111-1111-1111-111111111111'::uuid,
+      'b2222222-2222-2222-2222-222222222221'::uuid,
+      'a1111111-1111-1111-1111-111111111111'::uuid,
       '22222222-2222-2222-2222-222222222222'::uuid,
       (SELECT id FROM public.exercises WHERE user_id IS NULL LIMIT 1),
       1, 1, 'working', 10, 50.0
@@ -222,7 +222,7 @@ SELECT throws_ok(
 SELECT throws_ok(
   $$
     SELECT public.save_workout(jsonb_build_object(
-      'id', 'w1111111-1111-1111-1111-111111111111'::uuid,
+      'id', 'a1111111-1111-1111-1111-111111111111'::uuid,
       'date', now(),
       'sets', jsonb_build_array()
     ))
@@ -285,10 +285,10 @@ SELECT throws_ok(
 );
 
 -- save_workout unauthenticated check
-SET LOCAL ROLE anon;
-SELECT set_config('request.jwt.claims', '', true);
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claims', '{"role": "authenticated"}', true);
 SELECT set_config('request.jwt.claim.sub', '', true);
-SELECT set_config('request.jwt.claim.role', 'anon', true);
+SELECT set_config('request.jwt.claim.role', 'authenticated', true);
 
 SELECT throws_ok(
   $$
@@ -311,12 +311,12 @@ SELECT set_config('request.jwt.claim.role', 'authenticated', true);
 SELECT lives_ok(
   $$
     SELECT public.save_workout(jsonb_build_object(
-      'id', 'w1111111-1111-1111-1111-111111111111'::uuid,
+      'id', 'a1111111-1111-1111-1111-111111111111'::uuid,
       'date', '2026-09-20T10:00:00Z'::timestamptz,
       'notes', 'User A Leg Day (Updated)',
       'sets', jsonb_build_array(
         jsonb_build_object(
-          'id', 's1111111-1111-1111-1111-111111111111'::uuid,
+          'id', 'b1111111-1111-1111-1111-111111111111'::uuid,
           'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
           'exercise_order', 1,
           'set_number', 1,
@@ -326,7 +326,7 @@ SELECT lives_ok(
           'rpe', 6.0
         ),
         jsonb_build_object(
-          'id', 's1111111-1111-1111-1111-111111111112'::uuid,
+          'id', 'b1111111-1111-1111-1111-111111111112'::uuid,
           'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
           'exercise_order', 1,
           'set_number', 2,
@@ -336,7 +336,7 @@ SELECT lives_ok(
           'rpe', 9.0
         ),
         jsonb_build_object(
-          'id', 's1111111-1111-1111-1111-111111111114'::uuid,
+          'id', 'b1111111-1111-1111-1111-111111111114'::uuid,
           'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
           'exercise_order', 1,
           'set_number', 3,
@@ -353,14 +353,14 @@ SELECT lives_ok(
 
 -- Verify updated set weight
 SELECT results_eq(
-  $$SELECT weight_kg FROM public.sets WHERE id = 's1111111-1111-1111-1111-111111111112'::uuid$$,
+  $$SELECT weight_kg FROM public.sets WHERE id = 'b1111111-1111-1111-1111-111111111112'::uuid$$,
   $$VALUES (110.0::numeric)$$,
   'Updated set has new weight 110.0 kg'
 );
 
 -- Verify dropped set 3 was removed
 SELECT is_empty(
-  $$SELECT * FROM public.sets WHERE id = 's1111111-1111-1111-1111-111111111113'::uuid$$,
+  $$SELECT * FROM public.sets WHERE id = 'b1111111-1111-1111-1111-111111111113'::uuid$$,
   'Dropped set 3 was removed on save_workout update'
 );
 
@@ -369,14 +369,14 @@ SELECT is_empty(
 -- ============================================================================
 -- Set 2 (110kg) is first working set and a PR
 SELECT results_eq(
-  $$SELECT is_weight_pr, is_e1rm_pr FROM public.view_set_prs WHERE set_id = 's1111111-1111-1111-1111-111111111112'::uuid$$,
+  $$SELECT is_weight_pr, is_e1rm_pr FROM public.view_set_prs WHERE set_id = 'b1111111-1111-1111-1111-111111111112'::uuid$$,
   $$VALUES (true, true)$$,
   'First working set in view_set_prs has is_weight_pr = true and is_e1rm_pr = true'
 );
 
--- Warmup set (s1111111-1111-1111-1111-111111111111) is excluded from view_set_prs
+-- Warmup set (b1111111-1111-1111-1111-111111111111) is excluded from view_set_prs
 SELECT is_empty(
-  $$SELECT * FROM public.view_set_prs WHERE set_id = 's1111111-1111-1111-1111-111111111111'::uuid$$,
+  $$SELECT * FROM public.view_set_prs WHERE set_id = 'b1111111-1111-1111-1111-111111111111'::uuid$$,
   'Warmup sets are excluded from view_set_prs'
 );
 
