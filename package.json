@@ -1,0 +1,21 @@
+{
+  "name": "workout-log",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "gen:types": "node scripts/gen-types.mjs",
+    "check:types": "npm run gen:types && git diff --exit-code src/types/database.ts"
+  }
+}
