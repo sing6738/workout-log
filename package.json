@@ -15,6 +15,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build",
     "gen:types": "node scripts/gen-types.mjs",
     "check:types": "npm run gen:types && git diff --exit-code src/types/database.ts"
   },
