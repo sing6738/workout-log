@@ -19,6 +19,7 @@ Priorities: correctness, security (RLS), tested logic, clear README. A small, po
 ## 1. Scope
 
 **In scope**
+
 - Weight training log: workouts → exercises → sets (reps, weight, RPE, set type).
 - Analytics: progressive overload chart per exercise, volume, estimated 1RM, automatic PR detection.
 - Cardio: **not entered manually**. Imported via `.gpx` / `.csv` upload (main demo path) and Strava API (optional, OAuth 2.0).
@@ -29,16 +30,16 @@ Priorities: correctness, security (RLS), tested logic, clear README. A small, po
 
 ## 2. Tech stack
 
-| Area | Choice |
-|---|---|
-| Frontend | React + Vite + **TypeScript**, Tailwind CSS, React Router |
-| Server state | TanStack Query (later: persisted cache for offline queue) |
-| Validation | Zod (form input, CSV/GPX parsing, RPC payloads) |
-| Charts | Recharts (with accessible table alternative) |
-| Backend | Supabase: Postgres, Auth, RLS, Edge Functions (Strava only) |
-| Maps (Step 3) | Leaflet + decoded polyline / GPX track |
-| Tests | Vitest (logic), Playwright (e2e), pgTAP (RLS / DB functions) |
-| CI/CD | GitHub Actions (typecheck, lint, test), Vercel (preview per PR + production) |
+| Area          | Choice                                                                       |
+| ------------- | ---------------------------------------------------------------------------- |
+| Frontend      | React + Vite + **TypeScript**, Tailwind CSS, React Router                    |
+| Server state  | TanStack Query (later: persisted cache for offline queue)                    |
+| Validation    | Zod (form input, CSV/GPX parsing, RPC payloads)                              |
+| Charts        | Recharts (with accessible table alternative)                                 |
+| Backend       | Supabase: Postgres, Auth, RLS, Edge Functions (Strava only)                  |
+| Maps (Step 3) | Leaflet + decoded polyline / GPX track                                       |
+| Tests         | Vitest (logic), Playwright (e2e), pgTAP (RLS / DB functions)                 |
+| CI/CD         | GitHub Actions (typecheck, lint, test), Vercel (preview per PR + production) |
 
 ## 3. Repo structure
 
@@ -78,6 +79,7 @@ Keep pure logic (e1RM, unit conversion, plate calculator, GPX/Haversine, CSV map
 ## 4. Database
 
 Design decisions:
+
 - `profiles` mirrors `auth.users`; a trigger creates it on signup (otherwise every FK to `profiles` fails for new users).
 - `exercises.user_id IS NULL` = system master exercise; otherwise a user's custom exercise.
 - `sets.user_id` is denormalized so RLS is a simple column check. A **composite FK** `(workout_id, user_id) → workouts(id, user_id)` makes the DB guarantee a set belongs to a workout of the same owner.
@@ -408,6 +410,7 @@ window w as (
 **Routes**: `/login`, `/workouts`, `/workouts/new`, `/workouts/:id`, `/exercises`, `/analytics/:exerciseId`, `/cardio`, `/settings`.
 
 **Workout editor (core UX, mobile-first)**
+
 - Add exercise → rows of sets (weight, reps, RPE in 0.5 steps, set type toggle for warm-up).
 - On adding an exercise, call `get_previous_sets` and show previous weight/reps as placeholders; a "copy last set" button.
 - Numeric inputs use `inputMode="decimal"`; large +/- steppers.
@@ -436,13 +439,13 @@ Scope: `activity:read` (use `activity:read_all` only if private activities are n
 
 ## 7. Roadmap and acceptance criteria
 
-**Step 0 — Foundation.** Vite + TS + Tailwind, ESLint/Prettier, Supabase local setup, migrations 0001–0005 (including master exercises), generated types, Vercel deploy with previews, GitHub Actions CI. *Done when:* `supabase db reset` works locally, CI is green, an empty app is live on Vercel.
+**Step 0 — Foundation.** Vite + TS + Tailwind, ESLint/Prettier, Supabase local setup, migrations 0001–0005 (including master exercises), generated types, Vercel deploy with previews, GitHub Actions CI. _Done when:_ `supabase db reset` works locally, CI is green, an empty app is live on Vercel.
 
-**Step 1 — Core CRUD + Auth.** Email/password auth (session persistence, protected routes), profile, exercises (master + custom), workout list/editor via `save_workout`, previous-set auto-fill, copy-last-set. *Done when:* a new user can sign up, log a workout, edit it, delete it, and see it on another device; pgTAP RLS tests pass.
+**Step 1 — Core CRUD + Auth.** Email/password auth (session persistence, protected routes), profile, exercises (master + custom), workout list/editor via `save_workout`, previous-set auto-fill, copy-last-set. _Done when:_ a new user can sign up, log a workout, edit it, delete it, and see it on another device; pgTAP RLS tests pass.
 
-**Step 2 — Analytics & PR.** Progressive-overload chart, volume, e1RM, PR badges (from views), unit setting, timezone-correct grouping. Vitest for `e1rm.ts` / `units.ts`. *Done when:* charts match hand-computed values on seed data.
+**Step 2 — Analytics & PR.** Progressive-overload chart, volume, e1RM, PR badges (from views), unit setting, timezone-correct grouping. Vitest for `e1rm.ts` / `units.ts`. _Done when:_ charts match hand-computed values on seed data.
 
-**Step 3 — Import/Export and Cardio.** CSV export/import for workouts, GPX/CSV cardio import with dedupe, route map + pace chart, then Strava OAuth (last, optional; migration `0006_strava.sql`). *Done when:* re-importing the same file creates no duplicates.
+**Step 3 — Import/Export and Cardio.** CSV export/import for workouts, GPX/CSV cardio import with dedupe, route map + pace chart, then Strava OAuth (last, optional; migration `0006_strava.sql`). _Done when:_ re-importing the same file creates no duplicates.
 
 **Step 4 — Polish.** Timestamp-based rest timer (correct when tab is backgrounded; vibration/notification), plate calculator, workout templates / "start from last workout", consistency heatmap calendar, dark mode, PWA + optimistic updates + offline queue (idempotent thanks to client UUIDs).
 
