@@ -3,6 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement Step 1 Core CRUD & Authentication structured across **4 sequential PRs (PR 1a, PR 1b, PR 2, PR 3)**:
+
 - **PR 1a**: Scaffolding, App/Query Shell, Migration `0006_handle_new_user_timezone.sql`, and Full pgTAP RLS/Cascade/Timezone test suite. (Must NOT import `src/lib/supabase.ts`, allowing merge before any env vars exist).
 - **User Actions Checkpoint**: Hosted Supabase project creation, `npx supabase link`, `npx supabase db push`, review of Supabase Dashboard Security Advisors, and Vercel environment variables configuration.
 - **PR 1b**: Auth UI (login, signup with timezone passed in `options.data.timezone`), protected routes, `EnvErrorScreen`, Supabase client integration. (Starts only after user confirms hosted setup & security advisor review).
@@ -32,6 +33,7 @@ Branch: `feat/step1a-scaffold-db-tests`
 ## Task 1: Migration 0006 — Safe Timezone in `handle_new_user`
 
 **Files:**
+
 - Create: `supabase/migrations/0006_handle_new_user_timezone.sql`
 
 - [ ] **Step 1: Check Docker status**
@@ -93,11 +95,13 @@ git commit -m "feat(db): add migration 0006 for safe timezone handling in handle
 ## Task 2: Database Full pgTAP Test Suite (§4.6)
 
 **Files:**
+
 - Create / Modify: `supabase/tests/database/rls_views.test.sql`
 
 - [ ] **Step 1: Write full pgTAP test suite covering all §4.6 requirements**
 
 Include:
+
 1. User A cannot select/insert/update/delete User B's workouts, sets, cardio, custom exercises, profile.
 2. Master exercises readable by any authenticated user, not writable.
 3. Composite-FK cross-user integrity test (User A inserting a set referencing User B's workout is rejected).
@@ -303,6 +307,7 @@ git commit -m "test(db): add full pgTAP suite covering RLS, cascade, composite F
 ## Task 3: Install Step 1 Dependencies & Configure Vitest Component Testing
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `vitest.config.ts`
 - Create: `src/test/setup.ts`
@@ -356,6 +361,7 @@ git commit -m "chore: add react-router, react-query, lucide-react and configure 
 ## Task 4: App Shell, Navigation Layout & Router Scaffolding (Zero Supabase Import)
 
 **Files:**
+
 - Create: `src/components/layout/AppLayout.tsx`
 - Create: `src/components/layout/Navbar.tsx`
 - Create: `src/pages/PlaceholderPage.tsx`
@@ -384,7 +390,10 @@ export function Navbar() {
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div className="max-w-4xl mx-auto px-4 flex items-center justify-between h-14">
-        <Link to="/workouts" className="font-bold text-indigo-600 text-lg flex items-center gap-2">
+        <Link
+          to="/workouts"
+          className="font-bold text-indigo-600 text-lg flex items-center gap-2"
+        >
           <Dumbbell className="w-5 h-5" />
           <span>WorkoutLog</span>
         </Link>
@@ -435,7 +444,9 @@ export function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="p-8 text-center bg-white rounded-xl shadow-sm border border-gray-100">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
-      <p className="text-gray-500 text-sm">Feature module under construction.</p>
+      <p className="text-gray-500 text-sm">
+        Feature module under construction.
+      </p>
     </div>
   )
 }
@@ -455,11 +466,26 @@ export function AppRoutes() {
       <Route path="/signup" element={<PlaceholderPage title="Sign Up" />} />
       <Route element={<AppLayout />}>
         <Route path="/" element={<Navigate to="/workouts" replace />} />
-        <Route path="/workouts" element={<PlaceholderPage title="Workouts" />} />
-        <Route path="/workouts/new" element={<PlaceholderPage title="New Workout" />} />
-        <Route path="/workouts/:id" element={<PlaceholderPage title="Edit Workout" />} />
-        <Route path="/exercises" element={<PlaceholderPage title="Exercises" />} />
-        <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+        <Route
+          path="/workouts"
+          element={<PlaceholderPage title="Workouts" />}
+        />
+        <Route
+          path="/workouts/new"
+          element={<PlaceholderPage title="New Workout" />}
+        />
+        <Route
+          path="/workouts/:id"
+          element={<PlaceholderPage title="Edit Workout" />}
+        />
+        <Route
+          path="/exercises"
+          element={<PlaceholderPage title="Exercises" />}
+        />
+        <Route
+          path="/settings"
+          element={<PlaceholderPage title="Settings" />}
+        />
       </Route>
       <Route path="*" element={<Navigate to="/workouts" replace />} />
     </Routes>
@@ -497,7 +523,7 @@ describe('Router Scaffolding', () => {
     render(
       <MemoryRouter initialEntries={['/workouts']}>
         <AppRoutes />
-      </MemoryRouter>
+      </MemoryRouter>,
     )
     expect(screen.getByText('Workouts')).toBeInTheDocument()
   })
@@ -506,7 +532,7 @@ describe('Router Scaffolding', () => {
     render(
       <MemoryRouter initialEntries={['/settings']}>
         <AppRoutes />
-      </MemoryRouter>
+      </MemoryRouter>,
     )
     expect(screen.getByText('Settings')).toBeInTheDocument()
   })
@@ -574,11 +600,13 @@ gh pr create --title "feat: scaffold routing, tanstack query, migration 0006 and
   - In `supabase/config.toml`, ensure `major_version` matches the hosted database version (default is `17`).
 
 - [ ] **User Action 3: Link & Push Migrations to Hosted Database**
+
   ```bash
   npx supabase link --project-ref <your-project-ref>
   npx supabase db push
   ```
-  *(SAFETY: Never run `npx supabase db reset --linked` on production!)*
+
+  _(SAFETY: Never run `npx supabase db reset --linked` on production!)_
 
 - [ ] **User Action 4 (CRITICAL): Security Advisors Review**
   - In Supabase Dashboard -> Navigate to **Advisors -> Security**.
@@ -605,6 +633,7 @@ Branch: `feat/step1b-auth` (branched from updated `main` after user merges PR 1a
 ## Task 7: Env Error Screen & Safe Client Resolution
 
 **Files:**
+
 - Create: `src/components/EnvErrorScreen.tsx`
 - Create: `src/lib/supabase.ts`
 - Create: `src/components/EnvErrorScreen.test.tsx`
@@ -616,7 +645,9 @@ export function EnvErrorScreen({ error }: { error: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-red-200">
-        <h2 className="text-xl font-bold text-red-600 mb-2">Configuration Required</h2>
+        <h2 className="text-xl font-bold text-red-600 mb-2">
+          Configuration Required
+        </h2>
         <p className="text-sm text-gray-600 mb-4">
           Supabase environment variables are missing or invalid:
         </p>
@@ -624,8 +655,9 @@ export function EnvErrorScreen({ error }: { error: string }) {
           {error}
         </div>
         <p className="text-xs text-gray-500">
-          Please configure <code className="font-bold">VITE_SUPABASE_URL</code> and{' '}
-          <code className="font-bold">VITE_SUPABASE_ANON_KEY</code> in your environment variables.
+          Please configure <code className="font-bold">VITE_SUPABASE_URL</code>{' '}
+          and <code className="font-bold">VITE_SUPABASE_ANON_KEY</code> in your
+          environment variables.
         </p>
       </div>
     </div>
@@ -645,7 +677,10 @@ let _client: SupabaseClient<Database> | null = null
 export function getSupabase(): SupabaseClient<Database> {
   if (!_client) {
     const env = parseEnv(import.meta.env)
-    _client = createClient<Database>(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)
+    _client = createClient<Database>(
+      env.VITE_SUPABASE_URL,
+      env.VITE_SUPABASE_ANON_KEY,
+    )
   }
   return _client
 }
@@ -689,6 +724,7 @@ git commit -m "feat(auth): add EnvErrorScreen and lazy getSupabase client resolv
 ## Task 8: Auth Feature (Context, Pages, Protected Layout)
 
 **Files:**
+
 - Create: `src/features/auth/AuthContext.tsx`
 - Create: `src/features/auth/LoginPage.tsx`
 - Create: `src/features/auth/SignupPage.tsx`
@@ -831,7 +867,7 @@ export function SignupPage() {
 
     try {
       const supabase = getSupabase()
-      
+
       // Determine timezone from supported values
       let detectedTimezone = 'Asia/Bangkok'
       try {
@@ -860,7 +896,9 @@ export function SignupPage() {
       if (data.session) {
         navigate('/workouts')
       } else if (data.user && !data.session) {
-        setInfoMessage('Account created! Please check your email inbox to confirm your account before logging in.')
+        setInfoMessage(
+          'Account created! Please check your email inbox to confirm your account before logging in.',
+        )
       }
     } catch (err: any) {
       setError(err.message || 'Failed to sign up')
@@ -872,7 +910,9 @@ export function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-gray-100">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Create Account</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+          Create Account
+        </h2>
 
         {error && (
           <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm mb-4 border border-red-200">
@@ -888,7 +928,9 @@ export function SignupPage() {
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Display Name
+            </label>
             <input
               type="text"
               value={displayName}
@@ -899,7 +941,9 @@ export function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
             <input
               type="email"
               required
@@ -911,7 +955,9 @@ export function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <input
               type="password"
               required
@@ -934,7 +980,10 @@ export function SignupPage() {
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-indigo-600 font-medium hover:underline">
+          <Link
+            to="/login"
+            className="text-indigo-600 font-medium hover:underline"
+          >
             Sign In
           </Link>
         </p>
@@ -984,7 +1033,9 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8 border border-gray-100">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Welcome Back</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+          Welcome Back
+        </h2>
 
         {error && (
           <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm mb-4 border border-red-200">
@@ -994,7 +1045,9 @@ export function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
             <input
               type="email"
               required
@@ -1006,7 +1059,9 @@ export function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <input
               type="password"
               required
@@ -1028,7 +1083,10 @@ export function LoginPage() {
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Don't have an account?{' '}
-          <Link to="/signup" className="text-indigo-600 font-medium hover:underline">
+          <Link
+            to="/signup"
+            className="text-indigo-600 font-medium hover:underline"
+          >
             Sign Up
           </Link>
         </p>
@@ -1050,7 +1108,9 @@ export function ProtectedRoute() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-500 text-sm animate-pulse">Loading session...</div>
+        <div className="text-gray-500 text-sm animate-pulse">
+          Loading session...
+        </div>
       </div>
     )
   }
@@ -1079,6 +1139,7 @@ git commit -m "feat(auth): add AuthContext, LoginPage, SignupPage with timezone 
 ## Task 9: Wire Auth into App Shell & Router
 
 **Files:**
+
 - Modify: `src/App.tsx`
 - Modify: `src/router.tsx`
 
@@ -1139,6 +1200,7 @@ Branch: `feat/step1-profile-exercises` (branched from updated `main` after PR 1b
 ## Task 11: Profile & Settings Page
 
 **Files:**
+
 - Create: `src/features/profile/SettingsPage.tsx`
 - Create: `src/features/profile/useProfile.ts`
 - Create: `src/features/profile/SettingsPage.test.tsx`
@@ -1162,6 +1224,7 @@ git commit -m "feat(profile): add SettingsPage with timezone picker and weight u
 ## Task 12: Exercise Directory & Custom Exercise Creation
 
 **Files:**
+
 - Create: `src/features/exercises/ExerciseListPage.tsx`
 - Create: `src/features/exercises/CreateExerciseModal.tsx`
 - Create: `src/features/exercises/useExercises.ts`
@@ -1188,7 +1251,7 @@ git commit -m "feat(exercises): add exercise list and custom exercise creation m
 ## Task 13: Verify PR 2, Push Branch & Open PR (STOP)
 
 - [ ] **Step 1: Verify tests and build**
-  Run: `npm run test`, `npm run lint`, `npm run typecheck`, `npm run build`.
+      Run: `npm run test`, `npm run lint`, `npm run typecheck`, `npm run build`.
 - [ ] **Step 2: Push branch and create PR 2**
 
 ```bash
@@ -1214,6 +1277,7 @@ Branch: `feat/step1-workouts` (branched from updated `main` after PR 2 is merged
 ## Task 14: Unit Conversion Helpers with 45/135/225 lb Round-Trip Tests
 
 **Files:**
+
 - Create: `src/lib/units.ts`
 - Create: `src/lib/units.test.ts`
 
@@ -1238,6 +1302,7 @@ git commit -m "feat(units): add weight conversion helpers and 45/135/225 lb roun
 ## Task 15: Workout Validation Schemas & Tests
 
 **Files:**
+
 - Create: `src/features/workouts/workoutSchemas.ts`
 - Create: `src/features/workouts/workoutSchemas.test.ts`
 
@@ -1255,6 +1320,7 @@ git commit -m "feat(workouts): add Zod validation schemas for workout editor pay
 ## Task 16: Workout List Dashboard
 
 **Files:**
+
 - Create: `src/features/workouts/WorkoutListPage.tsx`
 - Create: `src/features/workouts/WorkoutCard.tsx`
 - Create: `src/features/workouts/useWorkouts.ts`
@@ -1274,6 +1340,7 @@ git commit -m "feat(workouts): add workout list dashboard with delete mutation"
 ## Task 17: Workout Editor (Atomic RPC Save, Auto-fill, Copy Set)
 
 **Files:**
+
 - Create: `src/features/workouts/WorkoutEditorPage.tsx`
 - Create: `src/features/workouts/ExerciseSection.tsx`
 - Create: `src/features/workouts/SetRow.tsx`
