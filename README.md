@@ -59,5 +59,7 @@ GitHub Actions runs on push/PR to `main`:
 
 Vercel is now connected to this GitHub repo (production on `main`, preview per PR).
 
+Live demo: https://workout-log-tau-sooty.vercel.app
+
 - **Step 0** (current): No environment variables needed (no auth/API usage yet)
 - **Step 1**: Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel dashboard
