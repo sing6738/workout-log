@@ -2,7 +2,7 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap;
 
-SELECT plan(45);
+SELECT plan(46);
 
 -- ============================================================================
 -- 1. Schema & RLS Enabled on Public Tables (10 tests)
@@ -63,6 +63,12 @@ VALUES
   ('22222222-2222-2222-2222-222222222222'::uuid, 'userb@example.com', '{"name": "User B", "timezone": "Europe/London"}'::jsonb),
   ('33333333-3333-3333-3333-333333333333'::uuid, 'usertzinv@example.com', '{"name": "User Bad TZ", "timezone": "Invalid/Timezone"}'::jsonb),
   ('44444444-4444-4444-4444-444444444444'::uuid, 'usertznull@example.com', '{"name": "User Null TZ"}'::jsonb);
+
+-- Setup dedicated custom exercises for User A and User B
+INSERT INTO public.exercises (id, user_id, name, category)
+VALUES
+  ('e1111111-1111-1111-1111-111111111111'::uuid, '11111111-1111-1111-1111-111111111111'::uuid, 'User A Custom Squat', 'Legs'),
+  ('e2222222-2222-2222-2222-222222222222'::uuid, '22222222-2222-2222-2222-222222222222'::uuid, 'User B Custom Press', 'Shoulders');
 
 SELECT results_eq(
   $$SELECT display_name, timezone FROM public.profiles WHERE id = '11111111-1111-1111-1111-111111111111'::uuid$$,
@@ -128,14 +134,10 @@ SELECT is_empty(
   'User B cannot select User A custom exercise'
 );
 
--- User B creates their own custom exercise
-INSERT INTO public.exercises (id, user_id, name, category)
-VALUES ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid, '22222222-2222-2222-2222-222222222222'::uuid, 'User B Custom Press', 'Shoulders');
-
 -- ============================================================================
--- 6. Atomic save_workout, RLS & Cross-User Security (11 tests)
+-- 6. Atomic save_workout, RLS & Cross-User Security (12 tests)
 -- ============================================================================
--- User A creates workout and sets via save_workout
+-- User A creates workout and sets via save_workout using their custom exercise
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claims', '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated"}', true);
 SELECT set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true);
@@ -150,7 +152,7 @@ SELECT lives_ok(
       'sets', jsonb_build_array(
         jsonb_build_object(
           'id', 'b1111111-1111-1111-1111-111111111111'::uuid,
-          'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
+          'exercise_id', 'e1111111-1111-1111-1111-111111111111'::uuid,
           'exercise_order', 1,
           'set_number', 1,
           'set_type', 'warmup',
@@ -160,7 +162,7 @@ SELECT lives_ok(
         ),
         jsonb_build_object(
           'id', 'b1111111-1111-1111-1111-111111111112'::uuid,
-          'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
+          'exercise_id', 'e1111111-1111-1111-1111-111111111111'::uuid,
           'exercise_order', 1,
           'set_number', 2,
           'set_type', 'working',
@@ -170,7 +172,7 @@ SELECT lives_ok(
         ),
         jsonb_build_object(
           'id', 'b1111111-1111-1111-1111-111111111113'::uuid,
-          'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
+          'exercise_id', 'e1111111-1111-1111-1111-111111111111'::uuid,
           'exercise_order', 1,
           'set_number', 3,
           'set_type', 'working',
@@ -209,7 +211,7 @@ SELECT throws_ok(
       'b2222222-2222-2222-2222-222222222221'::uuid,
       'a1111111-1111-1111-1111-111111111111'::uuid,
       '22222222-2222-2222-2222-222222222222'::uuid,
-      (SELECT id FROM public.exercises WHERE user_id IS NULL LIMIT 1),
+      'e2222222-2222-2222-2222-222222222222'::uuid,
       1, 1, 'working', 10, 50.0
     )
   $$,
@@ -224,12 +226,31 @@ SELECT throws_ok(
     SELECT public.save_workout(jsonb_build_object(
       'id', 'a1111111-1111-1111-1111-111111111111'::uuid,
       'date', now(),
-      'sets', jsonb_build_array()
+      'notes', 'Hacked by User B',
+      'sets', jsonb_build_array(
+        jsonb_build_object(
+          'id', 'b2222222-2222-2222-2222-222222222222'::uuid,
+          'exercise_id', 'e2222222-2222-2222-2222-222222222222'::uuid,
+          'exercise_order', 1,
+          'set_number', 1,
+          'set_type', 'working',
+          'reps', 10,
+          'weight_kg', 100.0
+        )
+      )
     ))
   $$,
-  'P0001',
-  'Workout not found or not owned by user',
+  NULL,
+  NULL,
   'save_workout rejects modifying another user workout id'
+);
+
+-- Verify as postgres role that User A workout was not modified by User B rejected update
+SET LOCAL ROLE postgres;
+SELECT results_eq(
+  $$SELECT user_id, notes FROM public.workouts WHERE id = 'a1111111-1111-1111-1111-111111111111'::uuid$$,
+  $$VALUES ('11111111-1111-1111-1111-111111111111'::uuid, 'User A Leg Day'::text)$$,
+  'User A workout row remains untouched after User B rejected update'
 );
 
 -- save_workout cross-user exercise rejection: User A cannot use User B custom exercise
@@ -246,7 +267,7 @@ SELECT throws_ok(
       'sets', jsonb_build_array(
         jsonb_build_object(
           'id', gen_random_uuid(),
-          'exercise_id', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'::uuid,
+          'exercise_id', 'e2222222-2222-2222-2222-222222222222'::uuid,
           'exercise_order', 1,
           'set_number', 1,
           'set_type', 'working',
@@ -269,7 +290,7 @@ SELECT throws_ok(
       'date', now(),
       'sets', jsonb_build_array(
         jsonb_build_object(
-          'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL LIMIT 1),
+          'exercise_id', 'e1111111-1111-1111-1111-111111111111'::uuid,
           'exercise_order', 1,
           'set_number', 1,
           'set_type', 'working',
@@ -317,7 +338,7 @@ SELECT lives_ok(
       'sets', jsonb_build_array(
         jsonb_build_object(
           'id', 'b1111111-1111-1111-1111-111111111111'::uuid,
-          'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
+          'exercise_id', 'e1111111-1111-1111-1111-111111111111'::uuid,
           'exercise_order', 1,
           'set_number', 1,
           'set_type', 'warmup',
@@ -327,7 +348,7 @@ SELECT lives_ok(
         ),
         jsonb_build_object(
           'id', 'b1111111-1111-1111-1111-111111111112'::uuid,
-          'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
+          'exercise_id', 'e1111111-1111-1111-1111-111111111111'::uuid,
           'exercise_order', 1,
           'set_number', 2,
           'set_type', 'working',
@@ -337,7 +358,7 @@ SELECT lives_ok(
         ),
         jsonb_build_object(
           'id', 'b1111111-1111-1111-1111-111111111114'::uuid,
-          'exercise_id', (SELECT id FROM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squat' LIMIT 1),
+          'exercise_id', 'e1111111-1111-1111-1111-111111111111'::uuid,
           'exercise_order', 1,
           'set_number', 3,
           'set_type', 'working',
