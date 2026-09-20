@@ -2,14 +2,23 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap;
 
-SELECT plan(13);  -- 5 tables + 1 trigger def + 1 trigger execution + 3 views + 3 master exercise checks
+SELECT plan(18);  -- 5 tables exist + 5 RLS enabled + 1 trigger def + 1 trigger execution + 3 views security_invoker + 3 master exercise checks
 
--- RLS enabled on all 5 public tables
+-- Tables exist & RLS enabled on all 5 public tables
 SELECT has_table('public', 'profiles', 'profiles table exists');
+SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.profiles'::regclass), 'RLS enabled on profiles');
+
 SELECT has_table('public', 'exercises', 'exercises table exists');
+SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.exercises'::regclass), 'RLS enabled on exercises');
+
 SELECT has_table('public', 'workouts', 'workouts table exists');
+SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.workouts'::regclass), 'RLS enabled on workouts');
+
 SELECT has_table('public', 'sets', 'sets table exists');
+SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.sets'::regclass), 'RLS enabled on sets');
+
 SELECT has_table('public', 'cardio_logs', 'cardio_logs table exists');
+SELECT ok((SELECT relrowsecurity FROM pg_class WHERE oid = 'public.cardio_logs'::regclass), 'RLS enabled on cardio_logs');
 
 -- Trigger definition on auth.users
 SELECT trigger_is('auth', 'users', 'on_auth_user_created', 'public', 'handle_new_user');
@@ -29,9 +38,9 @@ SELECT results_eq(
 );
 
 -- All public views: security_invoker = true
-SELECT view_owner_is('public', 'view_exercise_stats', 'postgres');
-SELECT view_owner_is('public', 'view_daily_exercise_summary', 'postgres');
-SELECT view_owner_is('public', 'view_set_prs', 'postgres');
+SELECT ok((SELECT coalesce(reloptions::text, '') LIKE '%security_invoker=true%' FROM pg_class WHERE oid = 'public.view_exercise_stats'::regclass), 'view_exercise_stats is security_invoker');
+SELECT ok((SELECT coalesce(reloptions::text, '') LIKE '%security_invoker=true%' FROM pg_class WHERE oid = 'public.view_daily_exercise_summary'::regclass), 'view_daily_exercise_summary is security_invoker');
+SELECT ok((SELECT coalesce(reloptions::text, '') LIKE '%security_invoker=true%' FROM pg_class WHERE oid = 'public.view_set_prs'::regclass), 'view_set_prs is security_invoker');
 
 -- Master exercises exist (user_id IS NULL = master)
 SELECT ok(
