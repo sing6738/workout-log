@@ -23,7 +23,7 @@ Copy `.env.example` to `.env` and fill in values from `npx supabase status`:
 
 ```bash
 cp .env.example .env
-npx supabase status  # copy API URL and anon key
+npx supabase status # copy API URL and anon key
 ```
 
 ### Available Scripts
@@ -42,10 +42,10 @@ npx supabase status  # copy API URL and anon key
 ### Database
 
 ```bash
-npx supabase start       # start local Supabase (Docker)
-npx supabase db reset     # apply all migrations
-npx supabase test db      # run pgTAP tests
-npx supabase stop         # stop local Supabase
+npx supabase start # start local Supabase (Docker)
+npx supabase db reset # apply all migrations
+npx supabase test db # run pgTAP tests
+npx supabase stop # stop local Supabase
 ```
 
 ## CI
@@ -53,11 +53,13 @@ npx supabase stop         # stop local Supabase
 GitHub Actions runs on push/PR to `main`:
 
 - **app** job: typecheck → lint → format:check → test → build
-- **db** job: supabase start → reset → check:types → test db
+- **db** job: supabase start → db reset → test db → gen:types → upload types artifact → git diff --exit-code on src/types/database.ts
 
 ## Deployment
 
-Vercel is connected to this GitHub repo. Preview deployments on PRs, production on `main`.
+Vercel is now connected to this GitHub repo (production on `main`, preview per PR).
 
-- **Step 0** (current): No Supabase env vars needed (no auth/API usage yet)
+Live demo: https://workout-log-tau-sooty.vercel.app
+
+- **Step 0** (current): No environment variables needed (no auth/API usage yet)
 - **Step 1**: Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel dashboard
